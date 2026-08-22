@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yercaud Gallery - WanderScape</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(0, 174, 239, 0.18), transparent 35%),
+                linear-gradient(135deg, #020b2d, #001f4d 45%, #003b63);
+            color: white;
+            min-height: 100vh;
+        }
+
+        .gallery-page {
+            width: min(1200px, 92%);
+            margin: auto;
+            padding: 55px 0 70px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 45px;
+        }
+
+        .back-btn {
+            display: inline-block;
+            color: #dff7ff;
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 22px;
+            padding: 9px 18px;
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 25px;
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(10px);
+            transition: 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.18);
+            transform: translateY(-2px);
+        }
+
+        h1 {
+            font-size: clamp(32px, 5vw, 58px);
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .subtitle {
+            color: #b9dce9;
+            font-size: 16px;
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+        }
+
+        .photo {
+            position: relative;
+            height: 280px;
+            overflow: hidden;
+            border-radius: 16px;
+            cursor: pointer;
+            background: #06213b;
+            box-shadow: 0 12px 35px rgba(0,0,0,0.35);
+        }
+
+        .photo:nth-child(1),
+        .photo:nth-child(6) {
+            grid-column: span 2;
+        }
+
+        .photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.7s ease, filter 0.7s ease;
+        }
+
+        .photo::after {
+            content: "View photo";
+            position: absolute;
+            inset: auto 0 0 0;
+            padding: 35px 18px 16px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.7));
+            opacity: 0;
+            transition: 0.35s ease;
+            font-size: 14px;
+        }
+
+        .photo:hover img {
+            transform: scale(1.08);
+            filter: brightness(0.8);
+        }
+
+        .photo:hover::after {
+            opacity: 1;
+        }
+
+        /* Lightbox */
+        .lightbox {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(0, 7, 18, 0.96);
+            backdrop-filter: blur(14px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .lightbox.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        .lightbox-image {
+            max-width: min(90vw, 1200px);
+            max-height: 82vh;
+            object-fit: contain;
+            border-radius: 10px;
+            box-shadow: 0 25px 80px rgba(0,0,0,0.7);
+            transform: scale(0.94);
+            transition: transform 0.35s ease;
+        }
+
+        .lightbox.active .lightbox-image {
+            transform: scale(1);
+        }
+
+        .close,
+        .prev,
+        .next {
+            position: absolute;
+            width: 52px;
+            height: 52px;
+            border: 1px solid rgba(255,255,255,0.22);
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+            transition: 0.25s ease;
+        }
+
+        .close:hover,
+        .prev:hover,
+        .next:hover {
+            background: rgba(255,255,255,0.22);
+            transform: scale(1.08);
+        }
+
+        .close {
+            top: 25px;
+            right: 28px;
+            font-size: 25px;
+        }
+
+        .prev {
+            left: 28px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .next {
+            right: 28px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .prev:hover,
+        .next:hover {
+            transform: translateY(-50%) scale(1.08);
+        }
+
+        .counter {
+            position: absolute;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #d8eef5;
+            font-size: 14px;
+            background: rgba(0,0,0,0.35);
+            padding: 8px 16px;
+            border-radius: 20px;
+        }
+
+        @media (max-width: 800px) {
+            .gallery {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .photo,
+            .photo:nth-child(1),
+            .photo:nth-child(6) {
+                grid-column: span 1;
+                height: 230px;
+            }
+
+            .photo:nth-child(1) {
+                grid-column: span 2;
+            }
+
+            .prev {
+                left: 12px;
+            }
+
+            .next {
+                right: 12px;
+            }
+        }
+
+        @media (max-width: 520px) {
+            .gallery-page {
+                padding-top: 35px;
+            }
+
+            .gallery {
+                grid-template-columns: 1fr;
+            }
+
+            .photo,
+            .photo:nth-child(1),
+            .photo:nth-child(6) {
+                grid-column: span 1;
+                height: 240px;
+            }
+
+            .lightbox {
+                padding: 18px;
+            }
+
+            .lightbox-image {
+                max-width: 94vw;
+                max-height: 75vh;
+            }
+
+            .close,
+            .prev,
+            .next {
+                width: 46px;
+                height: 46px;
+            }
+
+            .close {
+                top: 15px;
+                right: 15px;
+            }
+
+            .prev {
+                left: 10px;
+            }
+
+            .next {
+                right: 10px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                transition: none !important;
+                animation: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <main class="gallery-page">
+
+        <header class="header">
+            <a href="YERCAUD.html" class="back-btn">← Back to Yercaud</a>
+
+            <h1>Yercaud</h1>
+            <p class="subtitle">A collection of moments from the mountain ride</p>
+        </header>
+
+        <section class="gallery" aria-label="Yercaud photo gallery">
+
+            <!-- Change these image filenames to your actual photo names -->
+            <div class="photo">
+                <img src="YER01.jpg" alt="Yercaud mountain landscape">
+            </div>
+
+            <div class="photo">
+                <img src="YER02.jpg" alt="Yercaud road">
+            </div>
+
+            <div class="photo">
+                <img src="YER03.jpg" alt="Yercaud hills">
+            </div>
+
+            <div class="photo">
+                <img src="YER04.jpg" alt="Yercaud scenery">
+            </div>
+
+            <div class="photo">
+                <img src="YER05.jpg" alt="Yercaud mountain road">
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Full-screen lightbox -->
+    <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer">
+
+        <button class="close" id="closeBtn" type="button" aria-label="Close photo viewer">×</button>
+
+        <button class="prev" id="prevBtn" type="button" aria-label="Previous photo">‹</button>
+
+        <img class="lightbox-image" id="lightboxImage" src="" alt="">
+
+        <button class="next" id="nextBtn" type="button" aria-label="Next photo">›</button>
+
+        <div class="counter" id="counter">1 / 8</div>
+    </div>
+
+    <script>
+        const photos = Array.from(document.querySelectorAll(".photo img"));
+        const lightbox = document.getElementById("lightbox");
+        const lightboxImage = document.getElementById("lightboxImage");
+        const closeBtn = document.getElementById("closeBtn");
+        const prevBtn = document.getElementById("prevBtn");
+        const nextBtn = document.getElementById("nextBtn");
+        const counter = document.getElementById("counter");
+
+        let currentIndex = 0;
+
+        function showPhoto(index) {
+            if (!photos.length) return;
+
+            currentIndex = (index + photos.length) % photos.length;
+
+            lightboxImage.src = photos[currentIndex].src;
+            lightboxImage.alt = photos[currentIndex].alt;
+            counter.textContent = `${currentIndex + 1} / ${photos.length}`;
+        }
+
+        function openLightbox(index) {
+            showPhoto(index);
+            lightbox.classList.add("active");
+            document.body.style.overflow = "hidden";
+            closeBtn.focus();
+        }
+
+        function closeLightbox() {
+            lightbox.classList.remove("active");
+            document.body.style.overflow = "";
+        }
+
+        photos.forEach((photo, index) => {
+            photo.addEventListener("click", () => {
+                openLightbox(index);
+            });
+        });
+
+        prevBtn.addEventListener("click", () => {
+            showPhoto(currentIndex - 1);
+        });
+
+        nextBtn.addEventListener("click", () => {
+            showPhoto(currentIndex + 1);
+        });
+
+        closeBtn.addEventListener("click", closeLightbox);
+
+        lightbox.addEventListener("click", (event) => {
+            if (event.target === lightbox) {
+                closeLightbox();
+            }
+        });
+
+        document.addEventListener("keydown", (event) => {
+            if (!lightbox.classList.contains("active")) return;
+
+            if (event.key === "Escape") {
+                closeLightbox();
+            }
+
+            if (event.key === "ArrowLeft") {
+                showPhoto(currentIndex - 1);
+            }
+
+            if (event.key === "ArrowRight") {
+                showPhoto(currentIndex + 1);
+            }
+        });
+    </script>
+
+</body>
+</html>
